@@ -1,0 +1,56 @@
+{
+  "summary": "Security fixes for SQL injection, hardcoded secrets, and XSS vulnerabilities",
+  "file_changes": [
+    {
+      "file_path": "app.py",
+      "issue_type": "sql-injection",
+      "description": "Prevent SQL injection by using parameterized queries",
+      "changes": [
+        {
+          "line_start": 45,
+          "line_end": 50,
+          "old_code": "cursor.execute(\"SELECT * FROM users WHERE username = '\" + username + \"'\")",
+          "new_code": "cursor.execute(\"SELECT * FROM users WHERE username = %s\", (username,))",
+          "explanation": "Use parameterized query to prevent SQL injection by separating SQL logic from user input"
+        }
+      ]
+    },
+    {
+      "file_path": "config.py",
+      "issue_type": "hardcoded-secrets",
+      "description": "Remove hardcoded API key and use environment variables",
+      "changes": [
+        {
+          "line_start": 12,
+          "line_end": 15,
+          "old_code": "API_KEY = 'mysecretkey123'",
+          "new_code": "import os\n\nAPI_KEY = os.environ.get('APP_API_KEY')",
+          "explanation": "Load sensitive credentials from environment variables instead of source code"
+        }
+      ]
+    },
+    {
+      "file_path": "templates.py",
+      "issue_type": "xss",
+      "description": "Sanitize user input before rendering in templates",
+      "changes": [
+        {
+          "line_start": 78,
+          "line_end": 82,
+          "old_code": "return render_template('user.html', username=username)",
+          "new_code": "from flask import escape\nreturn render_template('user.html', username=escape(username))",
+          "explanation": "Use HTML escaping to prevent Cross-Site Scripting (XSS) attacks"
+        }
+      ]
+    }
+  ],
+  "additional_files": [
+    {
+      "file_path": ".env.example",
+      "content": "APP_API_KEY=your_secure_api_key_here\n",
+      "purpose": "Template for environment configuration with secure API key"
+    }
+  ],
+  "commit_message": "security: Remediate SQL injection, hardcoded secrets, and XSS vulnerabilities",
+  "raw_response": "{\n    \"summary\": \"Security fixes for SQL injection, hardcoded secrets, and XSS vulnerabilities\",\n    \"file_changes\": [\n        {\n            \"file_path\": \"app.py\", \n            \"issue_type\": \"sql-injection\",\n            \"description\": \"Prevent SQL injection by using parameterized queries\",\n            \"changes\": [\n                {\n                    \"line_start\": 45,\n                    \"line_end\": 50,\n                    \"old_code\": \"cursor.execute(\\\"SELECT * FROM users WHERE username = '\\\" + username + \\\"'\\\")\",\n                    \"new_code\": \"cursor.execute(\\\"SELECT * FROM users WHERE username = %s\\\", (username,))\",\n                    \"explanation\": \"Use parameterized query to prevent SQL injection by separating SQL logic from user input\"\n                }\n            ]\n        },\n        {\n            \"file_path\": \"config.py\",\n            \"issue_type\": \"hardcoded-secrets\", \n            \"description\": \"Remove hardcoded API key and use environment variables\",\n            \"changes\": [\n                {\n                    \"line_start\": 12,\n                    \"line_end\": 15,\n                    \"old_code\": \"API_KEY = 'mysecretkey123'\",\n                    \"new_code\": \"import os\\n\\nAPI_KEY = os.environ.get('APP_API_KEY')\",\n                    \"explanation\": \"Load sensitive credentials from environment variables instead of source code\"\n                }\n            ]\n        },\n        {\n            \"file_path\": \"templates.py\",\n            \"issue_type\": \"xss\",\n            \"description\": \"Sanitize user input before rendering in templates\", \n            \"changes\": [\n                {\n                    \"line_start\": 78,\n                    \"line_end\": 82,\n                    \"old_code\": \"return render_template('user.html', username=username)\",\n                    \"new_code\": \"from flask import escape\\nreturn render_template('user.html', username=escape(username))\",\n                    \"explanation\": \"Use HTML escaping to prevent Cross-Site Scripting (XSS) attacks\"\n                }\n            ]\n        }\n    ],\n    \"additional_files\": [\n        {\n            \"file_path\": \".env.example\",\n            \"content\": \"APP_API_KEY=your_secure_api_key_here\\n\",\n            \"purpose\": \"Template for environment configuration with secure API key\"\n        }\n    ],\n    \"commit_message\": \"security: Remediate SQL injection, hardcoded secrets, and XSS vulnerabilities\"\n}"
+}
