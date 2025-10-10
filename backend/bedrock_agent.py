@@ -82,6 +82,36 @@ class BedrockAgentCore:
             # Fallback to basic analysis
             return self._fallback_analysis(scan_results, repo_context)
 
+    def generate_code_fixes(self, security_issues: List[Dict], repo_context: Dict) -> Dict:
+        """
+        Generate actual code fixes for security vulnerabilities
+
+        Args:
+            security_issues: List of security issues from analysis
+            repo_context: Repository metadata and context
+
+        Returns:
+            Dictionary containing code fixes with diffs for each file
+        """
+        print("🔧 Generating code fixes with Claude...")
+
+        try:
+            # Build the code fix prompt
+            prompt = self._build_code_fix_prompt(security_issues, repo_context)
+
+            # Call Claude API for code generation
+            response = self._call_claude_api(prompt)
+
+            # Parse the code fix response
+            fixes = self._parse_code_fix_response(response)
+
+            print(f"✓ Generated fixes for {len(fixes.get('file_changes', []))} files")
+            return fixes
+
+        except Exception as e:
+            print(f"❌ Code fix generation error: {e}")
+            return self._fallback_code_fixes(security_issues, repo_context)
+
     def _call_claude_api(self, prompt: str) -> Dict:
         """Make API call to Anthropic Claude"""
         headers = {
@@ -280,6 +310,131 @@ Top Warnings (first 5):
                 {"tool": "create_github_issue", "priority": 1},
                 {"tool": "log_to_vanta", "priority": 2}
             ]
+        }
+
+    def _build_code_fix_prompt(self, security_issues: List[Dict], repo_context: Dict) -> str:
+        """Build prompt for generating code fixes"""
+
+        issues_context = ""
+        for i, issue in enumerate(security_issues[:3], 1):  # Limit to top 3 issues
+            issues_context += f"""
+Issue #{i}:
+- File: {issue.get('file', 'unknown')}
+- Line: {issue.get('line', 'unknown')}
+- Vulnerability: {issue.get('title', 'Security Issue')}
+- Description: {issue.get('description', 'No description')}
+- Current Code Problem: {issue.get('recommended_fix', 'See description')}
+"""
+
+        prompt = f"""You are an expert software security engineer. Generate specific code fixes for the following security vulnerabilities.
+
+Repository: {repo_context.get('repo_name', 'Unknown')}
+Branch: {repo_context.get('branch', 'main')}
+
+Security Issues to Fix:
+{issues_context}
+
+For each vulnerability, provide the exact code changes needed. Return your response in this JSON format:
+
+{{
+    "summary": "Brief summary of fixes applied",
+    "file_changes": [
+        {{
+            "file_path": "path/to/file.py",
+            "issue_type": "sql-injection|xss|hardcoded-secrets|etc",
+            "description": "What this fix addresses",
+            "changes": [
+                {{
+                    "line_start": 10,
+                    "line_end": 15,
+                    "old_code": "exact old code here",
+                    "new_code": "exact new secure code here",
+                    "explanation": "why this fix works"
+                }}
+            ]
+        }}
+    ],
+    "additional_files": [
+        {{
+            "file_path": "new/security/config.py",
+            "content": "complete file content if new file needed",
+            "purpose": "what this new file does"
+        }}
+    ],
+    "commit_message": "security: fix vulnerabilities in authentication and input validation"
+}}
+
+Requirements:
+1. Provide EXACT code replacements - include proper indentation
+2. Focus on the most critical security issues first
+3. Ensure fixes don't break existing functionality
+4. Add security best practices (input validation, sanitization, etc.)
+5. Include proper error handling where needed
+6. Use secure coding patterns for the detected language
+
+Respond ONLY with valid JSON - no additional text."""
+
+        return prompt
+
+    def _parse_code_fix_response(self, response: Dict) -> Dict:
+        """Parse Claude response for code fixes"""
+        try:
+            # Extract response text
+            if "content" in response and len(response["content"]) > 0:
+                response_text = response["content"][0]["text"]
+            else:
+                raise ValueError("No content in response")
+
+            # Parse JSON
+            try:
+                fixes = json.loads(response_text)
+            except json.JSONDecodeError:
+                # Try to extract JSON from text
+                import re
+                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+                if json_match:
+                    fixes = json.loads(json_match.group())
+                else:
+                    raise ValueError("Could not extract JSON from response")
+
+            # Validate structure
+            if "file_changes" not in fixes:
+                fixes["file_changes"] = []
+            if "additional_files" not in fixes:
+                fixes["additional_files"] = []
+            if "summary" not in fixes:
+                fixes["summary"] = "Code fixes generated"
+            if "commit_message" not in fixes:
+                fixes["commit_message"] = "security: fix vulnerabilities"
+
+            fixes["raw_response"] = response_text
+            return fixes
+
+        except Exception as e:
+            print(f"⚠️ Error parsing code fix response: {e}")
+            return self._fallback_code_fixes_response(response)
+
+    def _fallback_code_fixes_response(self, response: Dict) -> Dict:
+        """Fallback response for code fixes"""
+        return {
+            "summary": "Could not generate automatic fixes",
+            "file_changes": [],
+            "additional_files": [],
+            "commit_message": "security: manual review required",
+            "raw_response": str(response),
+            "error": "Code fix generation failed"
+        }
+
+    def _fallback_code_fixes(self, security_issues: List[Dict], repo_context: Dict) -> Dict:
+        """Fallback when code fix generation fails"""
+        print("🔄 Using fallback code fixes...")
+
+        return {
+            "summary": f"Manual fixes needed for {len(security_issues)} security issues",
+            "file_changes": [],
+            "additional_files": [],
+            "commit_message": "security: manual review and fixes required",
+            "error": "Automatic code fix generation unavailable"
         }
 
 

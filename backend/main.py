@@ -209,6 +209,29 @@ async def github_webhook(
                 }
             )
 
+        # LOOP PREVENTION: Skip security fix branches to prevent infinite loops
+        if branch.startswith("security-fixes-"):
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "message": f"Ignored security fix branch: {branch}",
+                    "skipped_reason": "security_fix_branch",
+                    "timestamp": datetime.now().isoformat()
+                }
+            )
+
+        # ADDITIONAL LOOP PREVENTION: Skip security fix commits
+        commit_message = webhook_data.get("commit_message", "")
+        if commit_message.lower().startswith("security:"):
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "message": f"Ignored security fix commit: {commit_message[:50]}...",
+                    "skipped_reason": "security_fix_commit",
+                    "timestamp": datetime.now().isoformat()
+                }
+            )
+
         # Add background task to process the webhook
         background_tasks.add_task(
             process_webhook_background,
