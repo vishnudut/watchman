@@ -284,6 +284,12 @@ secrets.json
 # Test directories
 test-repo/
 
+# Test files
+test_*.py
+test_*.json
+test_*.html
+**/test_*
+
 # Temporary files
 *.tmp
 *.temp
