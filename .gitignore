@@ -276,6 +276,8 @@ Thumbs.db
 .env.local
 .env.production
 .env.staging
+.env.email.example
+.env.example
 config.json
 secrets.json
 
