@@ -55,9 +55,12 @@ export function Sidebar() {
 			{/* Logo */}
 			<div className="flex h-16 items-center px-6 border-b border-gray-200">
 				<div className="flex items-center space-x-3">
-					<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
-						<Shield className="h-6 w-6 text-white" />
-					</div>
+					<img
+						src="https://img.icons8.com/glyph-neue/64/policeman-male.png"
+						alt="Watchman Logo"
+						width="40"
+						height="40"
+					/>
 					<div>
 						<h1 className="text-xl font-bold text-gray-900">Watchman</h1>
 						<p className="text-xs text-gray-500">Security Platform</p>

@@ -1,6 +1,8 @@
-# Watchman 🛡️
-
-An intelligent, autonomous security scanning platform that automatically detects vulnerabilities in GitHub repositories using AI-powered analysis.
+<div align="center">
+  <img src="https://img.icons8.com/glyph-neue/64/policeman-male.png" alt="Watchman Logo" width="96" height="96"/>
+  <h1>Watchman</h1>
+  <p><i>An intelligent, autonomous security scanning platform that automatically detects vulnerabilities in GitHub repositories using AI-powered analysis.</i></p>
+</div>
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109.0-009688.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat&logo=next.js&logoColor=white)](https://nextjs.org/)
@@ -226,21 +228,6 @@ curl http://localhost:8000/scans?limit=10
 
 **Total Time**: < 60 seconds
 
-## Security Rulesets
-
-Watchman uses curated Semgrep rulesets:
-
-- `p/security-audit` - General security issues
-- `p/owasp-top-ten` - OWASP Top 10 vulnerabilities
-- `p/cwe-top-25` - CWE Top 25 dangerous errors
-
-## Loop Prevention
-
-Watchman includes intelligent loop prevention:
-
-- **Branch Filtering**: Skips branches starting with `security-fixes-`
-- **Commit Message Filtering**: Ignores commits starting with `security:`
-- **Idempotency**: Prevents duplicate processing of same commit
 
 ## Database Schema
 
